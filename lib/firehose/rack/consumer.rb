@@ -15,8 +15,8 @@ module Firehose
         yield self if block_given?
       end
 
-      def call(env)
-        websocket_request?(env) ? websocket.call(env) : http_long_poll.call(env)
+      def call(env, session_factory)
+        websocket_request?(env) ? websocket.call(env) : http_long_poll.call(env, session_factory)
       end
 
       # Memoized instance of web socket that can be configured from the rack app.
