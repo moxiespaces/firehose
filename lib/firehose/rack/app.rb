@@ -29,9 +29,14 @@ module Firehose
             # from inactivity
             ping.call(env)
           else
-            # TODO - 'harden' this up with a GET request and throw a "Bad Request" 
-            # HTTP error code. I'd do it now but I'm in a plane and can't think of it.
-            consumer.call(env, session_factory)
+            # ELB doesn't support HEAD requests
+            if env['PANTH_INFO'] == '/ping'
+              ping.call(env)
+            else
+              # TODO - 'harden' this up with a GET request and throw a "Bad Request" 
+              # HTTP error code. I'd do it now but I'm in a plane and can't think of it.
+              consumer.call(env, session_factory)
+            end
           end
         else
           response(403, "Invalid user session.")
