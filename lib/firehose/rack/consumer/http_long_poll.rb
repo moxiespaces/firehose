@@ -80,7 +80,10 @@ module Firehose
 
         def cors_headers(env)
           # TODO seperate out CORS logic as an async middleware with a Goliath web server.
-          {'Access-Control-Allow-Origin' => cors_origin(env)}
+          {
+            'Access-Control-Allow-Origin' => cors_origin(env),
+            'Access-Control-Allow-Credentials' => true
+          }
         end
       end
     end

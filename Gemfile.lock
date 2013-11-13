@@ -10,7 +10,6 @@ PATH
       faye-websocket
       json
       rack (~> 1.4.0)
-      rack-cors (~> 0.2.8)
       thor
 
 GEM
@@ -96,8 +95,6 @@ GEM
       method_source (~> 0.8)
       slop (~> 3.4)
     rack (1.4.5)
-    rack-cors (0.2.8)
-      rack
     rack-test (0.6.2)
       rack (>= 1.0)
     rainbows (4.4.3)

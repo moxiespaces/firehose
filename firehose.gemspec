@@ -27,7 +27,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "em-http-request", ">= 1.0.0"
   s.add_runtime_dependency "json"
   s.add_runtime_dependency "rack", "~> 1.4.0"
-  s.add_runtime_dependency "rack-cors", "~> 0.2.8"
   s.add_runtime_dependency "ezcrypto", "~> 0.7.2"
 
   s.add_development_dependency "rspec"

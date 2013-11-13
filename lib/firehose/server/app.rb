@@ -29,7 +29,7 @@ module Firehose
         opts = rackup[:options]
         opts[:config_file] = File.expand_path('../../../../config/rainbows.rb', __FILE__)
 
-        server = Rainbows::HttpServer.new(new_app_with_cors, opts)
+        server = Rainbows::HttpServer.new(Firehose::Rack::App.new, opts)
         server.start.join
       end
 
@@ -43,9 +43,8 @@ module Firehose
         #       printing out messages by itself.
         Thin::Logging.silent = true if Firehose.logger.level == Logger::ERROR
 
-        app = new_app_with_cors
         server = Thin::Server.new(@host, @port) do
-          run app
+          run Firehose::Rack::App.new
         end.start
       end
 

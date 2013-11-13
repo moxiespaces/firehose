@@ -47,8 +47,15 @@ module Firehose
 
         remote_address = request.ip
         data = "#{data.join(':')}:#{remote_address}"
-        signature = CGI.escape(Base64.encode64(signer.sign(data)))
-        headers['set-cookie'] = "_firehose=#{data}:#{signature}; HttpOnly"
+        signature = Base64.encode64(signer.sign(data))
+        ::Rack::Utils.set_cookie_header!(
+          headers,
+          '_firehose',
+          :value => "#{data}:#{signature}",
+          :path => '/',
+          :httponly => true,
+          :domain => request.host
+        )
 
         headers
       end
