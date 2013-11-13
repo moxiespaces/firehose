@@ -30,7 +30,7 @@ module Firehose
             ping.call(env)
           else
             # ELB doesn't support HEAD requests
-            if env['PANTH_INFO'] == '/ping'
+            if env['PATH_INFO'] == '/ping'
               ping.call(env)
             else
               # TODO - 'harden' this up with a GET request and throw a "Bad Request" 
