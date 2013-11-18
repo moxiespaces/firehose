@@ -18,7 +18,7 @@ module Firehose
           ttl = request.params['ttl']
           signature = request.params['signature']
 
-          if ttl && signature && ttl.to_i > 0 && Time.at(ttl.to_i) >= Time.now && verify(*data, ttl, signature)
+          if ttl && signature && ttl.to_i > 0 && Time.at(ttl.to_i) >= Time.now && verify(signature, *data, ttl)
             env['FIREHOSE_COOKIE'] = true
             UserSession.new(env, *data)
           end
@@ -26,7 +26,7 @@ module Firehose
           data = cookie.split(':')
           signature = data.pop
           remote_addr = data.pop
-          if request.ip == remote_addr && verify(*data, remote_addr, signature)
+          if request.ip == remote_addr && verify(signature, *data, remote_addr)
             UserSession.new(env, *data)
           end
         else
@@ -34,7 +34,7 @@ module Firehose
         end
       end
 
-      def verify(*data, signature)
+      def verify(signature, *data)
         string = data.join(":")
         signature = Base64.decode64(signature)
         verifier.verify(signature, string)

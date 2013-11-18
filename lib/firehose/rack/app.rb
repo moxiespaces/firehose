@@ -28,15 +28,15 @@ module Firehose
             # HEAD requests are used to prevent sockets from timing out
             # from inactivity
             ping.call(env)
-          else
+          when 'GET'
             # ELB doesn't support HEAD requests
             if env['PATH_INFO'] == '/ping'
               ping.call(env)
             else
-              # TODO - 'harden' this up with a GET request and throw a "Bad Request" 
-              # HTTP error code. I'd do it now but I'm in a plane and can't think of it.
               consumer.call(env, session_factory)
             end
+          else
+            response(405, "", :Allow => 'GET, HEAD, PUT')
           end
         else
           response(403, "Invalid user session.")

@@ -47,24 +47,6 @@ module Firehose
           run Firehose::Rack::App.new
         end.start
       end
-
-      # Create a new FirehoseApp wrapped with cors support
-      def new_app_with_cors
-        require 'rack/cors'
-        app = Firehose::Rack::App.new
-        ::Rack::Cors.new(app) do
-          allow do
-            origins 'https://*.moxiesoft.com',
-                    'https://*.moxiespaces.com',
-                    'https://*.moxiedev.com',
-                    'http://*.ngenplatform.com'
-
-            resource '*',
-              :methods => :get,
-              :headers => :any
-          end
-        end
-      end
     end
   end
 end
