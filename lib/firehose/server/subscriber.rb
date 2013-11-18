@@ -25,20 +25,29 @@ module Firehose
 
           if deferrables = subscriptions.delete(channel_key)
             Firehose.logger.debug "Redis notifying #{deferrables.count} deferrable(s) at `#{channel_key}` with sequence `#{sequence}` and message `#{message}`"
-            deferrables.each do |deferrable|
-              Firehose.logger.debug "Sending message #{message} and sequence #{sequence} to client from subscriber"
-              deferrable.succeed message, sequence.to_i
+            deferrables.each do |hash|
+              deferrable = hash[:deferrable]
+              user_session = hash[:user_session]
+              if message = user_session.secure_for_message(message)
+                Firehose.logger.debug "Sending message #{message} and sequence #{sequence} to client from subscriber"
+                deferrable.succeed message, sequence.to_i
+              else
+                Firehose.logger.debug "Skipping message #{message} and sequence #{sequence} for user: #{user_session.user_id}"
+                subscribe(channel_key, deferrable, user_session)
+              end
             end
+            subscriptions.delete(channel_key) if subscriptions[channel_key].empty?
           end
         end
       end
 
-      def subscribe(channel_key, deferrable)
-        subscriptions[channel_key].push deferrable
+      def subscribe(channel_key, deferrable, user_session)
+        subscriptions[channel_key].push :deferrable => deferrable, :user_session => user_session
       end
 
       def unsubscribe(channel_key, deferrable)
-        subscriptions[channel_key].delete deferrable
+        hash = subscriptions[channel_key].detect {|h| h[:deferrable] == deferrable}
+        subscriptions[channel_key].delete(hash) if hash
         subscriptions.delete(channel_key) if subscriptions[channel_key].empty?
       end
 

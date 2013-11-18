@@ -3,10 +3,10 @@ $:.push File.expand_path("../lib", __FILE__)
 require "firehose/version"
 
 Gem::Specification.new do |s|
-  s.name        = "firehose"
+  s.name        = "moxiesoft-firehose"
   s.version     = Firehose::VERSION
-  s.authors     = ["Brad Gessler", "Steel Fu", "Paul Cortens", "Zach Zolton"]
-  s.email       = ["brad@polleverywhere.com", "steel@polleverywhere.com", "paul@polleverywhere.com", "zach@polleverywhere.com"]
+  s.authors     = ["Jonathan Bell", "Brad Gessler", "Steel Fu", "Paul Cortens", "Zach Zolton"]
+  s.email       = ["jbell@moxiesoft.com", "brad@polleverywhere.com", "steel@polleverywhere.com", "paul@polleverywhere.com", "zach@polleverywhere.com"]
   s.homepage    = "http://firehose.io/"
   s.summary     = %q{Build realtime Ruby web applications}
   s.description = %q{Firehose is a realtime web application toolkit for building realtime Ruby web applications.}
@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "em-http-request", ">= 1.0.0"
   s.add_runtime_dependency "json"
   s.add_runtime_dependency "rack", "~> 1.4.0"
+  s.add_runtime_dependency "ezcrypto", "~> 0.7.2"
 
   s.add_development_dependency "rspec"
   s.add_development_dependency "webmock"
@@ -40,4 +41,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "foreman"
   s.add_development_dependency "sprockets"
   s.add_development_dependency "rake"
+  s.add_development_dependency "fury"
 end

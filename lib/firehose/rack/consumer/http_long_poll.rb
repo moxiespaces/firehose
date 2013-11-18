@@ -18,7 +18,7 @@ module Firehose
           yield self if block_given?
         end
 
-        def call(env)
+        def call(env, session_factory)
           req     = env['parsed_request'] ||= ::Rack::Request.new(env)
           path    = req.path
           method  = req.request_method
@@ -34,17 +34,18 @@ module Firehose
             Firehose.logger.debug "HTTP GET with last_sequence #{last_sequence} for path #{path} with query #{env["QUERY_STRING"].inspect} and params #{req.params.inspect}"
             EM.next_tick do
 
+              user_session = Firehose::Security::UserSession.load(env)
               if last_sequence < 0
-                env['async.callback'].call response(400, "The last_message_sequence parameter may not be less than zero", response_headers(env))
+                env['async.callback'].call response(400, "The last_message_sequence parameter may not be less than zero", response_headers(req, session_factory, user_session))
               else
-                Server::Channel.new(path).next_message(last_sequence, :timeout => timeout).callback do |message, sequence|
-                  env['async.callback'].call response(200, wrap_frame(message, sequence), response_headers(env))
+                Server::Channel.new(path, user_session).next_message(last_sequence, :timeout => timeout).callback do |message, sequence|
+                  env['async.callback'].call response(200, wrap_frame(message, sequence), response_headers(req, session_factory, user_session))
                 end.errback do |e|
                   if e == :timeout
-                    env['async.callback'].call response(204, '', response_headers(env))
+                    env['async.callback'].call response(204, '', response_headers(req, session_factory, user_session))
                   else
                     Firehose.logger.error "Unexpected error when trying to GET last_sequence #{last_sequence} for path #{path}: #{e.inspect}"
-                    env['async.callback'].call response(500, 'Unexpected error', response_headers(env))
+                    env['async.callback'].call response(500, 'Unexpected error', response_headers(req, session_factory, user_session))
                   end
                 end
               end
@@ -68,8 +69,9 @@ module Firehose
         end
 
         # If the request is a CORS request, return those headers, otherwise don't worry 'bout it
-        def response_headers(env)
-          cors_origin(env) ? cors_headers(env) : {}
+        def response_headers(req, session_factory, user_session)
+          headers = cors_origin(req.env) ? cors_headers(req.env) : {}
+          session_factory.apply_cookie(req, headers, user_session)
         end
 
         def cors_origin(env)
@@ -78,7 +80,10 @@ module Firehose
 
         def cors_headers(env)
           # TODO seperate out CORS logic as an async middleware with a Goliath web server.
-          {'Access-Control-Allow-Origin' => cors_origin(env)}
+          {
+            'Access-Control-Allow-Origin' => cors_origin(env),
+            'Access-Control-Allow-Credentials' => true
+          }
         end
       end
     end

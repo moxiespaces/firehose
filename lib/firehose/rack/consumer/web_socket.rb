@@ -8,7 +8,8 @@ module Firehose
         # Setup a handler for the websocket connection.
         def call(env)
           ws = Faye::WebSocket.new(env)
-          Handler.new(ws)
+          user_session = Firehose::Security::UserSession.load(env)
+          Handler.new(ws, user_session)
           ws.rack_response
         end
 
@@ -21,8 +22,9 @@ module Firehose
         # by the Consumer::WebSocket class. Deals with message sequence,
         # connection, failures, and subscription state.
         class Handler
-          def initialize(ws)
+          def initialize(ws, user_session)
             @ws = ws
+            @user_session = user_session
             @req = ::Rack::Request.new ws.env
             # Setup the event handlers from this class.
             @ws.onopen    = method :open
@@ -35,7 +37,7 @@ module Firehose
           # the last sequence for clients that reconnect. 
           def subscribe(last_sequence)
             @subscribed = true
-            @channel    = Server::Channel.new @req.path
+            @channel    = Server::Channel.new @req.path, @user_session
             @deferrable = @channel.next_message last_sequence
             @deferrable.callback do |message, sequence|
               Firehose.logger.debug "WS sent `#{message}` to `#{@req.path}` with sequence `#{sequence}`"
