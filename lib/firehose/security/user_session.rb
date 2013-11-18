@@ -23,6 +23,7 @@ module Firehose
         @user_id = user_id
         @superuser = superuser
         @superuser = nil if superuser == ''
+        @superuser = false if superuser == 'false'
       end
 
       def secure_for_message(message_str)
