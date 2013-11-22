@@ -89,9 +89,9 @@ module Firehose
 
       def next_valid_message(message_list, i, sequence)
         deferrable = EM::DefaultDeferrable.new
-        if message = user_session.secure_for_message(message_list[i])
+        if message = user_session.valid_for_session(message_list[i])
           deferrable.succeed message, sequence
-        elsif i > 1
+        elsif i > 0
           next_valid_message(message_list, i - 1, sequence + 1).
             callback {|a, b| deferrable.succeed a, b}.
             errback { |e| deferrable.fail e }
