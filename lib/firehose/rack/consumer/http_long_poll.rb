@@ -71,7 +71,7 @@ module Firehose
         # If the request is a CORS request, return those headers, otherwise don't worry 'bout it
         def response_headers(req, session_factory, user_session)
           headers = cors_origin(req.env) ? cors_headers(req.env) : {}
-          session_factory.apply_cookie(req, headers, user_session)
+          # session_factory.apply_cookie(req, headers, user_session)
         end
 
         def cors_origin(env)

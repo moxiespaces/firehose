@@ -14,23 +14,26 @@ module Firehose
       def establish_session(env)
         request = env['parsed_request'] ||= ::Rack::Request.new(env)
         
+        site_id = request.path_info.split('/')[1]
         if data = UserSession.session_data(request)
+          method = request.request_method
           ttl = request.params['ttl']
           signature = request.params['signature']
 
-          if ttl && signature && ttl.to_i > 0 && Time.at(ttl.to_i) >= Time.now && verify(signature, *data, ttl)
+          if ttl &&
+              signature && ttl.to_i > 0 &&
+              Time.at(ttl.to_i) >= Time.now &&
+              verify(signature, method, site_id, *data, ttl)
             env['FIREHOSE_COOKIE'] = true
-            UserSession.new(env, *data)
+            UserSession.new(request, *data)
           end
-        elsif cookie = request.cookies['_firehose']
-          data = cookie.split(':')
-          signature = data.pop
-          remote_addr = data.pop
-          if request.ip == remote_addr && verify(signature, *data, remote_addr)
-            UserSession.new(env, *data)
-          end
-        else
-          UserSession.new(env, nil)
+        # elsif cookie = request.cookies['_firehose']
+        #   data = cookie.split(':')
+        #   signature = data.pop
+        #   remote_addr = data.pop
+        #   if request.ip == remote_addr && verify(signature, site_id, *data, remote_addr)
+        #     UserSession.new(env, *data)
+        #   end
         end
       end
 
@@ -40,25 +43,25 @@ module Firehose
         verifier.verify(signature, string)
       end
 
-      def apply_cookie(request, headers, user_session)
-        return headers unless request.env['FIREHOSE_COOKIE']
-        data = user_session.session_data
-        return headers unless data
+      # def apply_cookie(request, headers, user_session)
+      #   return headers unless request.env['FIREHOSE_COOKIE']
+      #   data = user_session.session_data
+      #   return headers unless data
 
-        remote_address = request.ip
-        data = "#{data.join(':')}:#{remote_address}"
-        signature = Base64.encode64(signer.sign(data))
-        ::Rack::Utils.set_cookie_header!(
-          headers,
-          '_firehose',
-          :value => "#{data}:#{signature}",
-          :path => '/',
-          :httponly => true,
-          :domain => request.host
-        )
+      #   remote_address = request.ip
+      #   data = "#{data.join(':')}:#{remote_address}"
+      #   signature = Base64.encode64(signer.sign(data))
+      #   ::Rack::Utils.set_cookie_header!(
+      #     headers,
+      #     '_firehose',
+      #     :value => "#{data}:#{signature}",
+      #     :path => '/',
+      #     :httponly => true,
+      #     :domain => request.host
+      #   )
 
-        headers
-      end
+      #   headers
+      # end
     end
   end
 end

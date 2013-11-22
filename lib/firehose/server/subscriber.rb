@@ -25,10 +25,11 @@ module Firehose
 
           if deferrables = subscriptions.delete(channel_key)
             Firehose.logger.debug "Redis notifying #{deferrables.count} deferrable(s) at `#{channel_key}` with sequence `#{sequence}` and message `#{message}`"
+            message_hash = JSON.parse(message)
             deferrables.each do |hash|
               deferrable = hash[:deferrable]
               user_session = hash[:user_session]
-              if message = user_session.secure_for_message(message)
+              if message = user_session.valid_for_session(message, message_hash)
                 Firehose.logger.debug "Sending message #{message} and sequence #{sequence} to client from subscriber"
                 deferrable.succeed message, sequence.to_i
               else

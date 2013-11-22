@@ -19,27 +19,27 @@ module Firehose
         req     = env['parsed_request'] ||= ::Rack::Request.new(env)
         method  = req.request_method
 
-        if session_factory.establish_session(env)
-          case method
-          when 'PUT'
+        case method
+        when 'PUT'
+          session_protect(env) do
             # Firehose::Client::Publisher PUT's payloads to the server.
             publisher.call(env)
-          when 'HEAD' 
-            # HEAD requests are used to prevent sockets from timing out
-            # from inactivity
+          end
+        when 'HEAD' 
+          # HEAD requests are used to prevent sockets from timing out
+          # from inactivity
+          ping.call(env)
+        when 'GET'
+          # ELB doesn't support HEAD requests
+          if env['PATH_INFO'] == '/ping'
             ping.call(env)
-          when 'GET'
-            # ELB doesn't support HEAD requests
-            if env['PATH_INFO'] == '/ping'
-              ping.call(env)
-            else
+          else
+            session_protect(env) do
               consumer.call(env, session_factory)
             end
-          else
-            response(405, "", :Allow => 'GET, HEAD, PUT')
           end
         else
-          response(403, "Invalid user session.")
+          response(405, "", :Allow => 'GET, HEAD, PUT')
         end
       end
 
@@ -57,6 +57,14 @@ module Firehose
 
       def ping
         @ping ||= Ping.new
+      end
+
+      def session_protect(env, &block)
+        if session_factory.establish_session(env)
+          yield block
+        else
+          response(403, "Invalid user session.")
+        end
       end
     end
   end

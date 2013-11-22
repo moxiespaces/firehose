@@ -15,31 +15,42 @@ module Firehose
         env[SESSION_KEY]
       end
 
-      attr_reader :user_id
-      attr_reader :superuser
+      attr_reader :user_id, :superuser, :selector
 
-      def initialize(env, user_id, superuser=false)
+      def initialize(request, user_id, superuser=false)
+        env = request.env
         env[SESSION_KEY] = self
         @user_id = user_id
         @superuser = superuser
         @superuser = nil if superuser == ''
         @superuser = false if superuser == 'false'
+        @selector = Selector.new(request['selector'])
       end
 
-      def secure_for_message(message_str)
-        message = JSON.parse(message_str)
-        if user_ids = message.delete('user_ids')
-          if superuser || (user_id && user_ids.include?(user_id))
-            message.to_json
+      def valid_for_session(message_str, message=nil)
+        message ||= JSON.parse(message_str)
+        if selector.for_message?(message)
+          if user_ids = message.delete('user_ids')
+            if superuser || (user_id && user_ids.include?(user_id))
+              message.to_json
+            end
+          else
+            message_str
           end
-        else
-          message_str
         end
       end
 
       def session_data
         if user_id
           [user_id, superuser]
+        end
+      end
+
+      private
+
+      def parse_selector(selector)
+        unless selector.nil? || selector.blank?
+          Selector.new(selector)
         end
       end
     end
