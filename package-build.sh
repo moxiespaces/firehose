@@ -15,7 +15,7 @@ INDEX_DIR="${DIST_DIR}/${INDEX_BASE}"
 BUCKET="spaces-releases"
 DATE=`date +%Y%m%d%H%M`
 
-if [! -d $INDEX_DIR ]; then sudo mkdir -p $INDEX_DIR ; fi
+if [ ! -d $INDEX_DIR ]; then sudo mkdir -p $INDEX_DIR ; fi
 if [ ! -d $PACKAGE_DIR ]; then sudo mkdir -p ${PACKAGE_DIR};sudo chown -R deployer:deployer ${PACKAGE_DIR}; fi
 git checkout ${GIT_BRANCH}
 git submodule init 
