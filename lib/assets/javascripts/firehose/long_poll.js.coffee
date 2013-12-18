@@ -125,6 +125,8 @@ if $?.browser?.msie and parseInt($.browser.version, 10) in [8, 9]
             headers = "Content-Type: #{xdr.contentType}"
             callback 200, "OK", {text: xdr.responseText}, headers
           xdr.onerror = -> callback 404, "Not Found"
+          xdr.onprogress = xdr.ontimeout = ->
+          xdr.timeout = 0
           if s.xdrTimeout?
             xdr.ontimeout = -> callback 0, "timeout"
             xdr.timeout   = s.xdrTimeout
