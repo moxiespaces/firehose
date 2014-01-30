@@ -12,7 +12,11 @@ module Firehose
       end
 
       def establish_session(env)
-        request = env['parsed_request'] ||= ::Rack::Request.new(env)
+        request = env['parsed_request']
+        # Never want to parse request body, just query string
+        unless request.instance_variable_get(:@params)
+          request.instance_variable_set(:@params, request.GET)
+        end
         
         site_id = request.path_info.split('/')[1]
         if data = UserSession.session_data(request)
