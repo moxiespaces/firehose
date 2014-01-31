@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    moxiesoft-firehose (1.2.10.1)
+    moxiesoft-firehose (1.2.10.2)
       em-hiredis (>= 0.2.0)
       em-http-request (>= 1.0.0)
       eventmachine (>= 1.0.0)
